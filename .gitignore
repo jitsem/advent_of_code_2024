@@ -1,0 +1,4 @@
+/target
+/input/*
+!/input/0.input
+.idea/ 
