@@ -1,11 +1,11 @@
 use crate::common::day::Day;
-use crate::day0::Day0;
+use crate::days::day0::Day0;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
 mod common;
-mod day0;
+mod days;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world! Starting the advent");
