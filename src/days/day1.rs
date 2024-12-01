@@ -7,8 +7,10 @@ pub struct Day1 {
 
 impl Day for Day1 {
     fn part1(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let (mut left, mut right) = self.get_left_right()?;
+        let (left, right) = self.get_left_right();
 
+        let mut left: Vec<i32> = left.collect::<Result<Vec<_>, _>>()?;
+        let mut right: Vec<i32> = right.collect::<Result<Vec<_>, _>>()?;
         left.sort();
         right.sort();
 
@@ -21,35 +23,39 @@ impl Day for Day1 {
     }
 
     fn part2(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let (left, right) = self.get_left_right()?;
+        let (left, right) = self.get_left_right();
         let mut map: HashMap<i32, i32> = HashMap::new();
         for r in right {
-            map.entry(r).and_modify(|v| *v += 1).or_insert(1);
+            map.entry(r?).and_modify(|v| *v += 1).or_insert(1);
         }
-        Ok(left
-            .iter()
-            .map(|l| map.get(l).unwrap_or(&0) * l)
-            .sum::<i32>()
-            .to_string())
+        let folded: Result<i32, ParseIntError> = left.into_iter().try_fold(0, |acc, l| {
+            let mapped_value = l.map(|x| map.get(&x).unwrap_or(&0) * x)?;
+            Ok(acc + mapped_value)
+        });
+
+        Ok(folded?.to_string())
     }
 }
 
 impl Day1 {
-    fn get_left_right(&self) -> Result<(Vec<i32>, Vec<i32>), ParseIntError> {
-        let left: Result<Vec<i32>, _> = self
+    fn get_left_right(
+        &self,
+    ) -> (
+        impl Iterator<Item = Result<i32, ParseIntError>> + '_,
+        impl Iterator<Item = Result<i32, ParseIntError>> + '_,
+    ) {
+        let left = self
             .input
             .split_whitespace()
             .step_by(2)
-            .map(|s| s.parse::<i32>())
-            .collect();
-        let right: Result<Vec<i32>, _> = self
+            .map(|s| s.parse::<i32>());
+        let right = self
             .input
             .split_whitespace()
             .skip(1)
             .step_by(2)
-            .map(|s| s.parse::<i32>())
-            .collect();
-        Ok((left?, right?))
+            .map(|s| s.parse::<i32>());
+        (left, right)
     }
 }
 
