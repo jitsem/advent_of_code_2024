@@ -1,5 +1,6 @@
 use crate::common::day::Day;
 use crate::days::day0::Day0;
+use crate::days::day1::Day1;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -33,11 +34,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let day: Box<dyn Day> = match day.as_str() {
         "0" => Box::new(Day0 { input }),
+        "1" => Box::new(Day1 { input }),
         _ => {
             return Err(format!("No implementation known for day: {}", day.as_str()).into());
         }
     };
-    println!("Result part 1: {}", day.part1());
-    println!("Result part 2: {}", day.part2());
+    println!("Result part 1: {}", day.part1()?);
+    println!("Result part 2: {}", day.part2()?);
     Ok(())
 }
