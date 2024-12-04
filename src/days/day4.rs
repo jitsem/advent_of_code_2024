@@ -1,5 +1,4 @@
 use crate::common::day::Day;
-use crate::days::day4::ParseDirection::{LeftToRight, RightToLeft, TopToBottom};
 use std::error::Error;
 
 pub struct Day4 {
@@ -22,7 +21,14 @@ impl Day for Day4 {
     }
 
     fn part2(&self) -> Result<String, Box<dyn std::error::Error>> {
-        Ok("".to_string())
+        let parser = XmasParser::from(&self.input)?;
+        let mut xmas_count = 0;
+        for i in 0..parser.len() {
+            if parser.is_cross_mas(i) {
+                xmas_count += 1;
+            }
+        }
+        Ok(xmas_count.to_string())
     }
 }
 
@@ -38,7 +44,7 @@ enum ParseDirection {
 }
 impl ParseDirection {
     const VALUES: [Self; 8] = [
-        LeftToRight,
+        Self::LeftToRight,
         Self::RightToLeft,
         Self::TopToBottom,
         Self::BottomToTop,
@@ -52,27 +58,47 @@ impl ParseDirection {
 struct XmasParser {
     input: Vec<char>,
     width: i32,
-    height: i32,
 }
 
 impl XmasParser {
     fn from(input: &str) -> Result<Self, Box<dyn Error>> {
-        let height = input.lines().count();
         let width = input
             .lines()
             .next()
             .ok_or::<String>("Received empty input".into())?
             .len();
-        let input: Vec<char> = input.chars().filter(|c|!c.is_ascii_whitespace()).collect();
+        let input: Vec<char> = input.chars().filter(|c| !c.is_ascii_whitespace()).collect();
         Ok(XmasParser {
             input,
             width: width as i32,
-            height: width as i32,
         })
     }
 
     fn len(&self) -> usize {
         self.input.len()
+    }
+
+    fn is_cross_mas(&self, pos: usize) -> bool {
+        if self.input[pos] != 'A' {
+            return false;
+        }
+        let pos = pos as i32;
+        if (pos % self.width) - 1 < 0 || (pos % self.width) + 1 >= self.width {
+            return false;
+        }
+        let cross = (
+            pos - self.width - 1,
+            pos - self.width + 1,
+            pos + self.width - 1,
+            pos + self.width + 1,
+        );
+        matches!(
+            self.get_chars_2(cross),
+            (Some('M'), Some('M'), Some('S'), Some('S'))
+                | (Some('M'), Some('S'), Some('M'), Some('S'))
+                | (Some('S'), Some('S'), Some('M'), Some('M'))
+                | (Some('S'), Some('M'), Some('S'), Some('M'))
+        )
     }
 
     fn is_xmas(&self, pos: usize, direction: &ParseDirection) -> bool {
@@ -81,8 +107,12 @@ impl XmasParser {
         }
         let pos = pos as i32;
         let maybe_mas = match direction {
-            ParseDirection::LeftToRight if (pos % self.width) + 3 <= self.width - 1 => (pos + 1, pos + 2, pos + 3),
-            ParseDirection::RightToLeft if (pos % self.width) - 3 >= 0  => (pos - 1, pos - 2, pos - 3),
+            ParseDirection::LeftToRight if (pos % self.width) + 3 <= self.width - 1 => {
+                (pos + 1, pos + 2, pos + 3)
+            }
+            ParseDirection::RightToLeft if (pos % self.width) - 3 >= 0 => {
+                (pos - 1, pos - 2, pos - 3)
+            }
             ParseDirection::TopToBottom => (
                 pos + self.width,
                 pos + (2 * self.width),
@@ -93,7 +123,7 @@ impl XmasParser {
                 pos - (2 * self.width),
                 pos - (3 * self.width),
             ),
-            ParseDirection::LeftTopToRightBottom if (pos % self.width) + 3 <= self.width -1 => (
+            ParseDirection::LeftTopToRightBottom if (pos % self.width) + 3 <= self.width - 1 => (
                 pos + self.width + 1,
                 pos + (2 * self.width) + 2,
                 pos + (3 * self.width) + 3,
@@ -103,7 +133,7 @@ impl XmasParser {
                 pos + (2 * self.width) - 2,
                 pos + (3 * self.width) - 3,
             ),
-            ParseDirection::LeftBottomToRightTop if (pos % self.width) + 3 <= self.width -1 => (
+            ParseDirection::LeftBottomToRightTop if (pos % self.width) + 3 <= self.width - 1 => (
                 pos - self.width + 1,
                 pos - (2 * self.width) + 2,
                 pos - (3 * self.width) + 3,
@@ -122,13 +152,32 @@ impl XmasParser {
         }
     }
     fn get_chars(&self, train: (i32, i32, i32)) -> (Option<&char>, Option<&char>, Option<&char>) {
-        if (train.0.is_negative() || train.1.is_negative() || train.2.is_negative()) {
+        if train.0.is_negative() || train.1.is_negative() || train.2.is_negative() {
             return (None, None, None);
         }
         (
             self.input.get(train.0 as usize),
             self.input.get(train.1 as usize),
             self.input.get(train.2 as usize),
+        )
+    }
+
+    fn get_chars_2(
+        &self,
+        train: (i32, i32, i32, i32),
+    ) -> (Option<&char>, Option<&char>, Option<&char>, Option<&char>) {
+        if train.0.is_negative()
+            || train.1.is_negative()
+            || train.2.is_negative()
+            || train.3.is_negative()
+        {
+            return (None, None, None, None);
+        }
+        (
+            self.input.get(train.0 as usize),
+            self.input.get(train.1 as usize),
+            self.input.get(train.2 as usize),
+            self.input.get(train.3 as usize),
         )
     }
 }

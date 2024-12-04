@@ -3,10 +3,10 @@ use crate::days::day0::Day0;
 use crate::days::day1::Day1;
 use crate::days::day2::Day2;
 use crate::days::day3::Day3;
+use crate::days::day4::Day4;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use crate::days::day4::Day4;
 
 mod common;
 mod days;
