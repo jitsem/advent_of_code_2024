@@ -69,7 +69,7 @@ impl Parser {
                 if let Some(expr) = self.parse_do() {
                     return Some(expr);
                 }
-            } else if *token == Token::Func(FunctionType::Dont) {
+            } else if *token == Token::Func(Dont) {
                 if let Some(expr) = self.parse_dont() {
                     return Some(expr);
                 }
@@ -168,12 +168,12 @@ enum FunctionType {
     Dont,
 }
 
-struct Tokenizer<'a> {
-    input: &'a str,
+struct Tokenizer {
+    input: Vec<char>,
     current_pos: usize,
 }
 
-impl<'a> Iterator for Tokenizer<'a> {
+impl Iterator for Tokenizer {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -185,10 +185,10 @@ impl<'a> Iterator for Tokenizer<'a> {
     }
 }
 
-impl<'a> Tokenizer<'a> {
-    fn from(input: &'a str) -> Self {
+impl Tokenizer {
+    fn from(input: &str) -> Self {
         Tokenizer {
-            input,
+            input: input.chars().collect(),
             current_pos: 0,
         }
     }
@@ -213,7 +213,7 @@ impl<'a> Tokenizer<'a> {
         let mut number_str = String::new();
         let mut found_chars = 0;
         while let Some(c) = self.peek(found_chars).filter(|c| c.is_ascii_digit()) {
-            number_str.push(c);
+            number_str.push(*c);
             found_chars += 1;
         }
         Ok((LiteralNumer(number_str.parse()?), found_chars))
@@ -235,18 +235,18 @@ impl<'a> Tokenizer<'a> {
         Ok(found)
     }
 
-    fn current_char(&self) -> Option<char> {
+    fn current_char(&self) -> Option<&char> {
         if self.is_done() {
             return None;
         }
-        self.input.chars().nth(self.current_pos)
+        self.input.get(self.current_pos)
     }
     fn advance_char(&mut self, step: usize) {
         self.current_pos += step;
     }
 
-    fn peek(&self, step: usize) -> Option<char> {
-        self.input.chars().nth(self.current_pos + step)
+    fn peek(&self, step: usize) -> Option<&char> {
+        self.input.get(self.current_pos + step)
     }
 
     fn is_done(&self) -> bool {
