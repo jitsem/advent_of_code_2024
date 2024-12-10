@@ -4,6 +4,7 @@ use crate::days::day1::Day1;
 use crate::days::day2::Day2;
 use crate::days::day3::Day3;
 use crate::days::day4::Day4;
+use crate::days::day5::Day5;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -41,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "2" => Box::new(Day2 { input }),
         "3" => Box::new(Day3 { input }),
         "4" => Box::new(Day4 { input }),
+        "5" => Box::new(Day5 { input }),
         _ => {
             return Err(format!("No implementation known for day: {}", day.as_str()).into());
         }
