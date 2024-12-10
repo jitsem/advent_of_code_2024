@@ -12,8 +12,8 @@ impl Day for Day6 {
         visited_coords.insert(world.player.coord);
         loop {
             match world.move_player() {
-                PlayerMoveResult::Location(coord) => _ = visited_coords.insert(coord),
-                PlayerMoveResult::Turned => {}
+                PlayerMoveResult::Location(player) => _ = visited_coords.insert(player.coord),
+                PlayerMoveResult::Turned(_) => {}
                 PlayerMoveResult::FellOfWorld => {
                     break;
                 }
@@ -23,9 +23,28 @@ impl Day for Day6 {
     }
 
     fn part2(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let mut sum = 0;
-        sum += 1;
-        Ok(sum.to_string())
+        let mut loops_detected = 0;
+        let mut index_to_insert = 0;
+        loop {
+            let mut world = World::from(&self.input);
+            if world.spawn_object(index_to_insert) == SpawnResult::OutOfBounds {
+                break;
+            }
+
+            let mut visited_coords: HashSet<Player> = HashSet::new();
+            visited_coords.insert(world.player);
+            while let PlayerMoveResult::Location(player) | PlayerMoveResult::Turned(player) =
+                world.move_player()
+            {
+                if !visited_coords.insert(player) {
+                    loops_detected += 1;
+                    break;
+                }
+            }
+
+            index_to_insert += 1;
+        }
+        Ok(loops_detected.to_string())
     }
 }
 
@@ -35,7 +54,7 @@ enum Position {
     Obstacle,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum FaceDirection {
     Up,
     Right,
@@ -43,7 +62,7 @@ enum FaceDirection {
     Left,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Player {
     coord: Coord,
     dir: FaceDirection,
@@ -62,9 +81,15 @@ struct World {
 }
 
 enum PlayerMoveResult {
-    Location(Coord),
-    Turned,
+    Location(Player),
+    Turned(Player),
     FellOfWorld,
+}
+
+#[derive(PartialEq)]
+enum SpawnResult {
+    Ok,
+    OutOfBounds,
 }
 
 impl Player {
@@ -109,6 +134,19 @@ impl World {
         }
         World { player, space }
     }
+    fn spawn_object(&mut self, index: usize) -> SpawnResult {
+        let rows = self.space.len();
+        let cols = self.space[0].len();
+
+        if index >= rows * cols {
+            return SpawnResult::OutOfBounds;
+        }
+
+        let row = index / cols;
+        let col = index % cols;
+        self.space[row][col] = Position::Obstacle;
+        SpawnResult::Ok
+    }
 
     fn move_player(&mut self) -> PlayerMoveResult {
         let (dx, dy) = match self.player.dir {
@@ -132,7 +170,7 @@ impl World {
             Position::Free => {
                 self.player
                     .set_pos(next_tile.0 as usize, next_tile.1 as usize);
-                PlayerMoveResult::Location(self.player.coord)
+                PlayerMoveResult::Location(self.player)
             }
             Position::Obstacle => {
                 self.player.dir = match self.player.dir {
@@ -141,7 +179,7 @@ impl World {
                     FaceDirection::Down => FaceDirection::Left,
                     FaceDirection::Left => FaceDirection::Up,
                 };
-                PlayerMoveResult::Turned
+                PlayerMoveResult::Turned(self.player)
             }
         }
     }
@@ -182,6 +220,6 @@ mod tests {
 ......#..."
                 .to_string(),
         };
-        assert_eq!(day.part2().unwrap().trim(), "xxxx");
+        assert_eq!(day.part2().unwrap().trim(), "6");
     }
 }
